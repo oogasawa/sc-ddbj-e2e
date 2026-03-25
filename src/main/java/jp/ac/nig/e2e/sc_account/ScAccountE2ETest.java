@@ -17,6 +17,10 @@ import jp.ac.nig.e2e.base.E2ETestBase;
  *   SC-03: Keycloakログイン画面にusername/passwordフォームがある
  *   SC-04: KeycloakのIssuerがsc.ddbj.nig.ac.jpを指している（旧IPでない）
  *   SC-05: ログアウト後に再アクセスするとKeycloakにリダイレクトされる
+ *
+ * Federation禁止方向テスト（SC-accountはOP/ACからログインできない）:
+ *   SC-06: sc-accountのKeycloakにop-account-idpボタンがない（OP→SC禁止）
+ *   SC-07: sc-accountのKeycloakにac-account-idpボタンがない（AC→SC禁止）
  */
 public class ScAccountE2ETest extends E2ETestBase {
 
@@ -56,8 +60,7 @@ public class ScAccountE2ETest extends E2ETestBase {
 
     @E2ETest(description = "SC-03: Keycloakログイン画面にusername/passwordフォームがある")
     public void testKeycloakLoginForm() {
-        navigateTo(BASE + "/dashboard");
-        page.waitForURL("**/sc-auth/**", new Page.WaitForURLOptions().setTimeout(10000));
+        navigateToKeycloakLogin();
 
         assertVisible("#username");
         assertVisible("#password");
@@ -97,5 +100,51 @@ public class ScAccountE2ETest extends E2ETestBase {
         page.waitForURL("**/sc-auth/**", new Page.WaitForURLOptions().setTimeout(10000));
         assertUrlContains("/sc-auth/realms/sc-account");
         System.out.println("PASSED: After logout, redirect to Keycloak confirmed");
+    }
+
+    // -------------------------------------------------------------------------
+    // SC-06: sc-accountのKeycloakにop-account-idpボタンがない（OP→SC禁止）
+    // -------------------------------------------------------------------------
+
+    @E2ETest(description = "SC-06: sc-accountのKeycloakにop-account-idpボタンがない（OP→SC禁止ポリシー）")
+    public void testOpAccountIdpNotPresent() {
+        navigateToKeycloakLogin();
+
+        boolean hasOpIdp = page.locator("a[href*='op-account-idp'], a[id*='op-account']").count() > 0
+            || page.locator("*:has-text('OP-account'), *:has-text('Submission Account')").count() > 0;
+
+        if (hasOpIdp)
+            throw new AssertionError(
+                "op-account-idp button should NOT exist in sc-account Keycloak (policy: OP→SC is forbidden)");
+
+        System.out.println("PASSED: op-account-idp button correctly absent from sc-account Keycloak");
+    }
+
+    // -------------------------------------------------------------------------
+    // SC-07: sc-accountのKeycloakにac-account-idpボタンがない（AC→SC禁止）
+    // -------------------------------------------------------------------------
+
+    @E2ETest(description = "SC-07: sc-accountのKeycloakにac-account-idpボタンがない（AC→SC禁止ポリシー）")
+    public void testAcAccountIdpNotPresent() {
+        navigateToKeycloakLogin();
+
+        boolean hasAcIdp = page.locator("a[href*='ac-account-idp'], a[id*='ac-account']").count() > 0
+            || page.locator("*:has-text('個人ゲノム'), *:has-text('AC-account')").count() > 0;
+
+        if (hasAcIdp)
+            throw new AssertionError(
+                "ac-account-idp button should NOT exist in sc-account Keycloak (policy: AC→SC is forbidden)");
+
+        System.out.println("PASSED: ac-account-idp button correctly absent from sc-account Keycloak");
+    }
+
+    // -------------------------------------------------------------------------
+    // Helper
+    // -------------------------------------------------------------------------
+
+    private void navigateToKeycloakLogin() {
+        navigateTo(BASE + "/dashboard");
+        page.waitForURL("**/sc-auth/**", new Page.WaitForURLOptions().setTimeout(10000));
+        assertUrlContains("/sc-auth/realms/sc-account");
     }
 }

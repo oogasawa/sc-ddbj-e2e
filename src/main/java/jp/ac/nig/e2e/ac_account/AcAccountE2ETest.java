@@ -24,8 +24,11 @@ import jp.ac.nig.e2e.base.E2ETestBase;
  *   AC-03: Keycloakログイン画面にusername/passwordフォームがある
  *   AC-04: Keycloakログイン画面に「ORCID」ボタンがある
  *   AC-05: ORCiDボタンをクリックするとsandbox.orcid.orgにリダイレクトされる
- *   AC-06: Keycloakログイン画面に「遺伝研スパコン」ボタンがない（セキュリティポリシー確認）
+ *   AC-06: Keycloakログイン画面に「遺伝研スパコン」ボタンがない（SC→AC禁止ポリシー）
  *   AC-07: KeycloakのIssuerがsc.ddbj.nig.ac.jpを指している（旧IPでない）
+ *
+ * Federation禁止方向テスト:
+ *   AC-08: ac-accountのKeycloakにop-account-idpボタンがない（OP→AC禁止ポリシー）
  */
 public class AcAccountE2ETest extends E2ETestBase {
 
@@ -155,6 +158,24 @@ public class AcAccountE2ETest extends E2ETestBase {
             throw new AssertionError("issuer still contains old IP address");
 
         System.out.println("PASSED: OIDC issuer is sc.ddbj.nig.ac.jp (no old IP)");
+    }
+
+    // -------------------------------------------------------------------------
+    // AC-08: ac-accountのKeycloakにop-account-idpボタンがない（OP→AC禁止）
+    // -------------------------------------------------------------------------
+
+    @E2ETest(description = "AC-08: ac-accountのKeycloakにop-account-idpボタンがない（OP→AC禁止ポリシー）")
+    public void testOpAccountIdpNotPresent() {
+        navigateToKeycloakLogin();
+
+        boolean hasOpIdp = page.locator("a[href*='op-account-idp'], a[id*='op-account']").count() > 0
+            || page.locator("*:has-text('OP-account'), *:has-text('Submission Account')").count() > 0;
+
+        if (hasOpIdp)
+            throw new AssertionError(
+                "op-account-idp button should NOT exist in ac-account Keycloak (policy: OP→AC is forbidden)");
+
+        System.out.println("PASSED: op-account-idp button correctly absent from ac-account Keycloak");
     }
 
     // -------------------------------------------------------------------------
