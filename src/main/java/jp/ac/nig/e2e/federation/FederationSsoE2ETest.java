@@ -52,6 +52,7 @@ public class FederationSsoE2ETest extends E2ETestBase {
         navigateTo(OP_BASE + "/dashboard");
         page.waitForURL("**/op-auth/**", new Page.WaitForURLOptions().setTimeout(15000));
         assertUrlContains("/op-auth/realms/submission");
+        System.out.println("  [FED-01] op-auth login page: " + page.url());
 
         // Step 3: 「遺伝研スパコンでログイン」ボタンをクリック
         Locator scIdpBtn = page.locator(
@@ -61,14 +62,23 @@ public class FederationSsoE2ETest extends E2ETestBase {
             throw new AssertionError("supercomputer-idp button not found on op-account Keycloak login page");
         scIdpBtn.click();
 
-        // Step 4: sc-authにリダイレクト → 既存セッションで自動認証 → op-accountに戻る
-        // sc-authにある既存セッションcookieにより、ログインフォームが出ずにop-accountに戻るはず
+        // Step 4: sc-authへリダイレクト（既存セッションがあれば即座に戻る）
+        // 最初にsc-auth URLを待つ（デバッグ用）
+        try {
+            page.waitForURL("**/sc-auth/**", new Page.WaitForURLOptions().setTimeout(5000));
+            System.out.println("  [FED-01] sc-auth redirect: " + page.url());
+        } catch (Exception e) {
+            // sc-authを経由せずに直接op-accountに戻った場合（キャッシュ等）
+            System.out.println("  [FED-01] sc-auth step skipped or very fast");
+        }
+
+        // Step 5: op-accountに戻る（SSOが成功すれば再認証なしで到達）
         page.waitForURL("**/op-account/**", new Page.WaitForURLOptions().setTimeout(30000));
 
-        // Keycloakログインページに留まっていたら失敗（再認証が要求された）
         if (page.url().contains("/op-auth/") || page.url().contains("/sc-auth/"))
             throw new AssertionError(
-                "SSO failed: still on Keycloak login page instead of op-account. URL: " + page.url());
+                "SSO failed: still on Keycloak login page instead of op-account. URL: " + page.url()
+                + " | Page title: " + page.title());
 
         System.out.println("PASSED: SC→OP SSO succeeded without re-authentication. URL: " + page.url());
     }
@@ -90,6 +100,7 @@ public class FederationSsoE2ETest extends E2ETestBase {
         navigateTo(OP_BASE + "/dashboard");
         page.waitForURL("**/op-auth/**", new Page.WaitForURLOptions().setTimeout(15000));
         assertUrlContains("/op-auth/realms/submission");
+        System.out.println("  [FED-02] op-auth login page: " + page.url());
 
         // Step 3: 「遺伝研スパコン個人ゲノム解析アカウント」ボタンをクリック
         Locator acIdpBtn = page.locator(
@@ -99,12 +110,21 @@ public class FederationSsoE2ETest extends E2ETestBase {
             throw new AssertionError("ac-account-idp button not found on op-account Keycloak login page");
         acIdpBtn.click();
 
-        // Step 4: ac-authにリダイレクト → 既存セッションで自動認証 → op-accountに戻る
+        // Step 4: ac-authへリダイレクト（既存セッションがあれば即座に戻る）
+        try {
+            page.waitForURL("**/ac-auth/**", new Page.WaitForURLOptions().setTimeout(5000));
+            System.out.println("  [FED-02] ac-auth redirect: " + page.url());
+        } catch (Exception e) {
+            System.out.println("  [FED-02] ac-auth step skipped or very fast");
+        }
+
+        // Step 5: op-accountに戻る（SSOが成功すれば再認証なしで到達）
         page.waitForURL("**/op-account/**", new Page.WaitForURLOptions().setTimeout(30000));
 
         if (page.url().contains("/op-auth/") || page.url().contains("/ac-auth/"))
             throw new AssertionError(
-                "SSO failed: still on Keycloak login page instead of op-account. URL: " + page.url());
+                "SSO failed: still on Keycloak login page instead of op-account. URL: " + page.url()
+                + " | Page title: " + page.title());
 
         System.out.println("PASSED: AC→OP SSO succeeded without re-authentication. URL: " + page.url());
     }
