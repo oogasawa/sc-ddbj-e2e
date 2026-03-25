@@ -75,4 +75,17 @@ public abstract class E2ETestBase {
         if (!page.content().contains(text))
             throw new AssertionError("Expected page to contain: " + text);
     }
+
+    /**
+     * Keycloakのusername/passwordログインフォームに認証情報を入力してログインする。
+     * 呼び出し前に既にKeycloakログイン画面にいること。
+     * ログイン後は指定のURLパターンが現れるまで待つ。
+     */
+    protected void keycloakLogin(String username, String password, String waitForUrlPattern) {
+        page.locator("#username").fill(username);
+        page.locator("#password").fill(password);
+        page.locator("input[type='submit'], #kc-login").first().click();
+        page.waitForURL(waitForUrlPattern, new com.microsoft.playwright.Page.WaitForURLOptions()
+            .setTimeout(E2EConfig.TIMEOUT_MS));
+    }
 }

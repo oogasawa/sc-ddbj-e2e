@@ -4,6 +4,7 @@ import jp.ac.nig.e2e.ac_account.AcAccountE2ETest;
 import jp.ac.nig.e2e.base.E2EConfig;
 import jp.ac.nig.e2e.base.E2ETest;
 import jp.ac.nig.e2e.base.E2ETestBase;
+import jp.ac.nig.e2e.federation.FederationSsoE2ETest;
 import jp.ac.nig.e2e.op_account.OpAccountE2ETest;
 import jp.ac.nig.e2e.sc_account.ScAccountE2ETest;
 
@@ -33,7 +34,8 @@ public class E2ETestRunner {
     private static final List<Class<? extends E2ETestBase>> ALL_TESTS = List.of(
         ScAccountE2ETest.class,
         OpAccountE2ETest.class,
-        AcAccountE2ETest.class
+        AcAccountE2ETest.class,
+        FederationSsoE2ETest.class
     );
 
     private int passed = 0;

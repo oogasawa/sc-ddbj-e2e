@@ -13,6 +13,10 @@ public class E2EConfig {
     public static final int     SLOW_MO_MS   = Integer.parseInt(    getEnv("E2E_SLOW_MO_MS",  "0"));
     public static final String  SCREENSHOT_DIR = getEnv("E2E_SCREENSHOT_DIR", "target/e2e-screenshots");
 
+    // テスト用アカウント (各Keycloakレルムにローカルユーザーとして作成済み)
+    public static final String TEST_USERNAME = getEnv("E2E_TEST_USERNAME", "e2e-test-user");
+    public static final String TEST_PASSWORD = getEnv("E2E_TEST_PASSWORD", "E2eTestPass2024!");
+
     private static String getEnv(String key, String defaultValue) {
         String v = System.getenv(key);
         return v != null ? v : defaultValue;
@@ -25,6 +29,7 @@ public class E2EConfig {
         System.out.println("HEADLESS:       " + HEADLESS);
         System.out.println("TIMEOUT_MS:     " + TIMEOUT_MS);
         System.out.println("SCREENSHOT_DIR: " + SCREENSHOT_DIR);
+        System.out.println("TEST_USERNAME:  " + TEST_USERNAME);
         System.out.println("=========================");
     }
 }
