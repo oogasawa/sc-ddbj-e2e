@@ -42,9 +42,13 @@ public class FederationSsoE2ETest extends E2ETestBase {
     @E2ETest(description = "FED-01: sc-accountにログイン済みでop-accountにSSOできる（再認証不要）")
     public void testScToOpSso() {
         // Step 1: sc-accountにログイン
+        // NOTE: "**/sc-account/**" は "/sc-auth/realms/sc-account/..." にもマッチするため
+        //       ログイン前のKeycloak URLで即座にresolveされてしまう。
+        //       "https://sc.ddbj.nig.ac.jp/sc-account/**" を使うことでアプリURLのみにマッチさせる。
         navigateTo(SC_BASE + "/dashboard");
         page.waitForURL("**/sc-auth/**", new Page.WaitForURLOptions().setTimeout(15000));
-        keycloakLogin(E2EConfig.TEST_USERNAME, E2EConfig.TEST_PASSWORD, "**/sc-account/**");
+        keycloakLogin(E2EConfig.TEST_USERNAME, E2EConfig.TEST_PASSWORD,
+            "https://sc.ddbj.nig.ac.jp/sc-account/**");
         assertUrlContains("/sc-account");
         System.out.println("  [FED-01] sc-account login OK: " + page.url());
 
@@ -92,7 +96,9 @@ public class FederationSsoE2ETest extends E2ETestBase {
         // Step 1: ac-accountにログイン
         navigateTo(AC_BASE + "/dashboard");
         page.waitForURL("**/ac-auth/**", new Page.WaitForURLOptions().setTimeout(15000));
-        keycloakLogin(E2EConfig.TEST_USERNAME, E2EConfig.TEST_PASSWORD, "**/ac-account/**");
+        System.out.println("  [FED-02] ac-auth login page: " + page.url());
+        keycloakLogin(E2EConfig.TEST_USERNAME, E2EConfig.TEST_PASSWORD,
+            "https://sc.ddbj.nig.ac.jp/ac-account/**");
         assertUrlContains("/ac-account");
         System.out.println("  [FED-02] ac-account login OK: " + page.url());
 
