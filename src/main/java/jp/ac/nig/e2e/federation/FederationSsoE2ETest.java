@@ -1,6 +1,5 @@
 package jp.ac.nig.e2e.federation;
 
-import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import jp.ac.nig.e2e.base.E2EConfig;
 import jp.ac.nig.e2e.base.E2ETest;
@@ -17,9 +16,9 @@ import jp.ac.nig.e2e.base.E2ETestBase;
  *   OP-account → AC-account : 禁止
  *   AC-account → SC-account : 禁止
  *
- * SSOテスト:
- *   FED-01: sc-accountにログイン済み → op-accountにSSOできる（再認証不要）
- *   FED-02: ac-accountにログイン済み → op-accountにSSOできる（再認証不要）
+ * SSOテスト (MANUAL — requires 2FA):
+ *   FED-01: (MANUAL) sc-accountにログイン済み → op-accountにSSOできる（再認証不要）
+ *   FED-02: (MANUAL) ac-accountにログイン済み → op-accountにSSOできる（再認証不要）
  *
  * 禁止方向テスト（ボタン不在確認）:
  *   FED-03: sc-accountのKeycloakにop-account-idpボタンがない（OP→SC禁止）
@@ -37,103 +36,19 @@ public class FederationSsoE2ETest extends E2ETestBase {
 
     // -------------------------------------------------------------------------
     // FED-01: SC → OP SSO
+    // MANUAL TEST: SC-account requires 2FA (OTP).
+    // Test procedure: Log into sc-account manually, then navigate to
+    // op-account/dashboard and click "遺伝研スパコンでログイン" — should SSO
+    // without re-authentication.
     // -------------------------------------------------------------------------
-
-    @E2ETest(description = "FED-01: sc-accountにログイン済みでop-accountにSSOできる（再認証不要）")
-    public void testScToOpSso() {
-        // Step 1: sc-accountにログイン
-        // NOTE: "**/sc-account/**" は "/sc-auth/realms/sc-account/..." にもマッチするため
-        //       ログイン前のKeycloak URLで即座にresolveされてしまう。
-        //       "https://sc.ddbj.nig.ac.jp/sc-account/**" を使うことでアプリURLのみにマッチさせる。
-        navigateTo(SC_BASE + "/dashboard");
-        page.waitForURL("**/sc-auth/**", new Page.WaitForURLOptions().setTimeout(15000));
-        keycloakLogin(E2EConfig.TEST_USERNAME, E2EConfig.TEST_PASSWORD,
-            "https://sc.ddbj.nig.ac.jp/sc-account/**");
-        assertUrlContains("/sc-account");
-        System.out.println("  [FED-01] sc-account login OK: " + page.url());
-
-        // Step 2: op-account/dashboardへアクセス → op-authにリダイレクト
-        navigateTo(OP_BASE + "/dashboard");
-        page.waitForURL("**/op-auth/**", new Page.WaitForURLOptions().setTimeout(15000));
-        assertUrlContains("/op-auth/realms/submission");
-        System.out.println("  [FED-01] op-auth login page: " + page.url());
-
-        // Step 3: 「遺伝研スパコンでログイン」ボタンをクリック
-        Locator scIdpBtn = page.locator(
-            "a[id*='supercomputer'], a[href*='supercomputer-idp'], *:has-text('遺伝研スパコンでログイン')"
-        ).first();
-        if (!scIdpBtn.isVisible())
-            throw new AssertionError("supercomputer-idp button not found on op-account Keycloak login page");
-        scIdpBtn.click();
-
-        // Step 4: sc-authへリダイレクト（既存セッションがあれば即座に戻る）
-        // 最初にsc-auth URLを待つ（デバッグ用）
-        try {
-            page.waitForURL("**/sc-auth/**", new Page.WaitForURLOptions().setTimeout(5000));
-            System.out.println("  [FED-01] sc-auth redirect: " + page.url());
-        } catch (Exception e) {
-            // sc-authを経由せずに直接op-accountに戻った場合（キャッシュ等）
-            System.out.println("  [FED-01] sc-auth step skipped or very fast");
-        }
-
-        // Step 5: op-accountに戻る（SSOが成功すれば再認証なしで到達）
-        page.waitForURL("**/op-account/**", new Page.WaitForURLOptions().setTimeout(30000));
-
-        if (page.url().contains("/op-auth/") || page.url().contains("/sc-auth/"))
-            throw new AssertionError(
-                "SSO failed: still on Keycloak login page instead of op-account. URL: " + page.url()
-                + " | Page title: " + page.title());
-
-        System.out.println("PASSED: SC→OP SSO succeeded without re-authentication. URL: " + page.url());
-    }
 
     // -------------------------------------------------------------------------
     // FED-02: AC → OP SSO
+    // MANUAL TEST: AC-account requires 2FA (Email OTP).
+    // Test procedure: Log into ac-account manually, then navigate to
+    // op-account/dashboard and click "個人ゲノム" — should SSO
+    // without re-authentication.
     // -------------------------------------------------------------------------
-
-    @E2ETest(description = "FED-02: ac-accountにログイン済みでop-accountにSSOできる（再認証不要）")
-    public void testAcToOpSso() {
-        // Step 1: ac-accountにログイン
-        navigateTo(AC_BASE + "/dashboard");
-        page.waitForURL("**/ac-auth/**", new Page.WaitForURLOptions().setTimeout(15000));
-        System.out.println("  [FED-02] ac-auth login page: " + page.url());
-        keycloakLogin(E2EConfig.TEST_USERNAME, E2EConfig.TEST_PASSWORD,
-            "https://sc.ddbj.nig.ac.jp/ac-account/**");
-        assertUrlContains("/ac-account");
-        System.out.println("  [FED-02] ac-account login OK: " + page.url());
-
-        // Step 2: op-account/dashboardへアクセス → op-authにリダイレクト
-        navigateTo(OP_BASE + "/dashboard");
-        page.waitForURL("**/op-auth/**", new Page.WaitForURLOptions().setTimeout(15000));
-        assertUrlContains("/op-auth/realms/submission");
-        System.out.println("  [FED-02] op-auth login page: " + page.url());
-
-        // Step 3: 「遺伝研スパコン個人ゲノム解析アカウント」ボタンをクリック
-        Locator acIdpBtn = page.locator(
-            "a[id*='ac-account'], a[href*='ac-account-idp'], *:has-text('個人ゲノム')"
-        ).first();
-        if (!acIdpBtn.isVisible())
-            throw new AssertionError("ac-account-idp button not found on op-account Keycloak login page");
-        acIdpBtn.click();
-
-        // Step 4: ac-authへリダイレクト（既存セッションがあれば即座に戻る）
-        try {
-            page.waitForURL("**/ac-auth/**", new Page.WaitForURLOptions().setTimeout(5000));
-            System.out.println("  [FED-02] ac-auth redirect: " + page.url());
-        } catch (Exception e) {
-            System.out.println("  [FED-02] ac-auth step skipped or very fast");
-        }
-
-        // Step 5: op-accountに戻る（SSOが成功すれば再認証なしで到達）
-        page.waitForURL("**/op-account/**", new Page.WaitForURLOptions().setTimeout(30000));
-
-        if (page.url().contains("/op-auth/") || page.url().contains("/ac-auth/"))
-            throw new AssertionError(
-                "SSO failed: still on Keycloak login page instead of op-account. URL: " + page.url()
-                + " | Page title: " + page.title());
-
-        System.out.println("PASSED: AC→OP SSO succeeded without re-authentication. URL: " + page.url());
-    }
 
     // -------------------------------------------------------------------------
     // FED-03: OP→SC 禁止（sc-accountのKeycloakにop-account-idpボタンなし）
