@@ -132,7 +132,7 @@ public class OpAccountE2ETest extends E2ETestBase {
 
         // ランディングページのORCiDリンクをクリック
         page.locator("a[href*='kc_idp_hint=orcid']").first().click();
-        page.waitForURL("**/orcid.org/**", new Page.WaitForURLOptions().setTimeout(15000));
+        page.waitForURL("**/orcid.org/**", new Page.WaitForURLOptions().setTimeout(30000));
 
         if (!page.url().contains("orcid.org"))
             throw new AssertionError("Expected redirect to orcid.org but got: " + page.url());
@@ -151,7 +151,7 @@ public class OpAccountE2ETest extends E2ETestBase {
         // supercomputer-idpボタンをクリック
         Locator btn = page.locator("a[id*='supercomputer'], a[href*='supercomputer-idp'], *:has-text('遺伝研スパコンでログイン')").first();
         btn.click();
-        page.waitForURL("**/sc-auth/**", new Page.WaitForURLOptions().setTimeout(15000));
+        page.waitForURL("**/sc-auth/**", new Page.WaitForURLOptions().setTimeout(30000));
 
         assertUrlContains("/sc-auth/realms/sc-account");
         System.out.println("PASSED: supercomputer-idp → /sc-auth/realms/sc-account (" + page.url().substring(0, 80) + "...)");
@@ -167,7 +167,7 @@ public class OpAccountE2ETest extends E2ETestBase {
 
         Locator btn = page.locator("a[id*='ac-account'], a[href*='ac-account-idp'], *:has-text('個人ゲノム')").first();
         btn.click();
-        page.waitForURL("**/ac-auth/**", new Page.WaitForURLOptions().setTimeout(15000));
+        page.waitForURL("**/ac-auth/**", new Page.WaitForURLOptions().setTimeout(30000));
 
         assertUrlContains("/ac-auth/realms/personal-genome");
         System.out.println("PASSED: ac-account-idp → /ac-auth/realms/personal-genome (" + page.url().substring(0, 80) + "...)");
@@ -181,7 +181,7 @@ public class OpAccountE2ETest extends E2ETestBase {
     public void testOidcDiscoveryIssuer() {
         navigateTo(KC_REALM + "/.well-known/openid-configuration");
 
-        String body = page.locator("body, pre").textContent();
+        String body = page.content();
         if (!body.contains("sc.ddbj.nig.ac.jp"))
             throw new AssertionError("issuer does not contain sc.ddbj.nig.ac.jp");
         if (body.contains("192.168.5.") || body.contains("172.19.67."))

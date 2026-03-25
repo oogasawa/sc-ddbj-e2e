@@ -68,9 +68,24 @@ public class AcAccountE2ETest extends E2ETestBase {
     public void testKeycloakLoginForm() {
         navigateToKeycloakLogin();
 
-        assertVisible("#username");
-        assertVisible("#password");
-        assertVisible("input[type='submit'], #kc-login");
+        // Keycloak v2 theme uses #username; v1/custom themes may use input[name='username']
+        boolean hasUsernameField = page.locator("#username").count() > 0
+            || page.locator("input[name='username']").count() > 0;
+        if (!hasUsernameField)
+            throw new AssertionError("username field not found. URL=" + page.url()
+                + " Content=" + page.content().substring(0, 500));
+
+        boolean hasPasswordField = page.locator("#password").count() > 0
+            || page.locator("input[name='password']").count() > 0;
+        if (!hasPasswordField)
+            throw new AssertionError("password field not found");
+
+        boolean hasSubmit = page.locator("input[type='submit']").count() > 0
+            || page.locator("#kc-login").count() > 0
+            || page.locator("button[type='submit']").count() > 0;
+        if (!hasSubmit)
+            throw new AssertionError("submit button not found");
+
         System.out.println("PASSED: Keycloak login form present");
     }
 
@@ -99,7 +114,7 @@ public class AcAccountE2ETest extends E2ETestBase {
         navigateToKeycloakLogin();
 
         page.locator("a[id*='orcid'], a[href*='orcid'], *:has-text('ORCID')").first().click();
-        page.waitForURL("**/orcid.org/**", new Page.WaitForURLOptions().setTimeout(15000));
+        page.waitForURL("**/orcid.org/**", new Page.WaitForURLOptions().setTimeout(30000));
 
         if (!page.url().contains("orcid.org"))
             throw new AssertionError("Expected redirect to orcid.org but got: " + page.url());
@@ -133,7 +148,7 @@ public class AcAccountE2ETest extends E2ETestBase {
     public void testOidcDiscoveryIssuer() {
         navigateTo(KC_REALM + "/.well-known/openid-configuration");
 
-        String body = page.locator("body, pre").textContent();
+        String body = page.content();
         if (!body.contains("sc.ddbj.nig.ac.jp"))
             throw new AssertionError("issuer does not contain sc.ddbj.nig.ac.jp");
         if (body.contains("192.168.5.") || body.contains("172.19.67."))

@@ -73,7 +73,7 @@ public class ScAccountE2ETest extends E2ETestBase {
     public void testOidcDiscoveryIssuer() {
         navigateTo(KC_REALM + "/.well-known/openid-configuration");
 
-        String body = page.locator("body, pre").textContent();
+        String body = page.content();
         if (!body.contains("sc.ddbj.nig.ac.jp"))
             throw new AssertionError("issuer does not contain sc.ddbj.nig.ac.jp: " + body.substring(0, 200));
         if (body.contains("192.168.5.") || body.contains("172.19.67."))
