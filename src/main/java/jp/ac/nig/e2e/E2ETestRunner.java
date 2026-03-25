@@ -6,6 +6,10 @@ import jp.ac.nig.e2e.base.E2ETest;
 import jp.ac.nig.e2e.base.E2ETestBase;
 import jp.ac.nig.e2e.federation.FederationSsoE2ETest;
 import jp.ac.nig.e2e.op_account.OpAccountE2ETest;
+import jp.ac.nig.e2e.s5_external_access.S5ExternalAccessE2ETest;
+import jp.ac.nig.e2e.s6_identity_brokering.S6IdentityBrokeringE2ETest;
+import jp.ac.nig.e2e.s7_acl_grants.S7AclGrantsApiE2ETest;
+import jp.ac.nig.e2e.s8_acl_sync.S8AclSyncGatewayE2ETest;
 import jp.ac.nig.e2e.sc_account.ScAccountE2ETest;
 
 import java.lang.reflect.Method;
@@ -35,7 +39,11 @@ public class E2ETestRunner {
         ScAccountE2ETest.class,
         OpAccountE2ETest.class,
         AcAccountE2ETest.class,
-        FederationSsoE2ETest.class
+        FederationSsoE2ETest.class,
+        S5ExternalAccessE2ETest.class,
+        S6IdentityBrokeringE2ETest.class,
+        S7AclGrantsApiE2ETest.class,
+        S8AclSyncGatewayE2ETest.class
     );
 
     private int passed = 0;
