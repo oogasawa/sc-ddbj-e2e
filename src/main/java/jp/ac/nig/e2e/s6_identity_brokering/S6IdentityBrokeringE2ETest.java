@@ -18,7 +18,7 @@ import jp.ac.nig.e2e.base.E2ETestBase;
  *   S6-02: AC Keycloak ログインページに supercomputer-idp ボタンが表示されない (hideOnLogin)
  *   S6-03: OP-account Keycloak に ac-account-idp ボタンが表示される
  *   S6-04: SC Keycloak OIDC discovery が正しいホストを返す（brokeringの基盤確認）
- *   S6-05: AC-account にログイン後、ダッシュボードにアクセスできる
+ *   S6-05: (MANUAL) AC-account にログイン後、ダッシュボードにアクセスできる（2FA必須のため手動テスト）
  */
 public class S6IdentityBrokeringE2ETest extends E2ETestBase {
 
@@ -113,23 +113,8 @@ public class S6IdentityBrokeringE2ETest extends E2ETestBase {
 
     // -------------------------------------------------------------------------
     // S6-05: AC-account ログイン → ダッシュボード
+    // MANUAL TEST: AC-account requires 2FA (Email OTP).
+    // Automating 2FA login via Playwright + MailHog is possible but fragile.
+    // This test is better performed manually.
     // -------------------------------------------------------------------------
-
-    @E2ETest(description = "S6-05: AC-account にログイン後ダッシュボードにアクセスできる")
-    public void testAcAccountLoginAndDashboard() {
-        navigateTo(AC_BASE + "/dashboard");
-        page.waitForURL("**/ac-auth/**", new Page.WaitForURLOptions().setTimeout(15000));
-
-        keycloakLogin(E2EConfig.TEST_USERNAME, E2EConfig.TEST_PASSWORD,
-            "**/" + "ac-account" + "/**");
-
-        assertUrlContains("/ac-account");
-
-        String content = page.content();
-        if (content.contains("502 Bad Gateway") || content.contains("503 Service")
-            || content.contains("500 Internal Server Error"))
-            throw new AssertionError("AC-account dashboard returned error after login");
-
-        System.out.println("PASSED: AC-account login succeeded, dashboard accessible");
-    }
 }
